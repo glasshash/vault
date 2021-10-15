@@ -27,7 +27,7 @@ export async function getStaticPaths() {
     localContentDir: CONTENT_DIR,
     // new ----
     product: { name: productName, slug: productSlug },
-    basePath: baseRoute,
+    basePath: basePath,
   })
   return { paths, fallback: 'blocking' }
 }
@@ -40,7 +40,7 @@ export async function getStaticProps({ params }) {
       mainBranch,
       params,
       product,
-      basePath: baseRoute,
+      basePath: basePath,
     })
     return { props, revalidate: 10 }
   } catch (err) {
