@@ -121,6 +121,24 @@ func (c *Cassandra) NewUser(ctx context.Context, req dbplugin.NewUserRequest) (d
 	}
 
 	for _, stmt := range creationCQL {
+		if strings.Contains(stmt, "BATCH") { 
+			m := map[string]string{
+				"username": username,
+				"password": req.Password,
+			}
+			err = session.
+				Query(dbutil.QueryHelper(stmt, m)).
+				WithContext(ctx).
+				Exec()
+			if err != nil {
+				rollbackErr := rollbackUser(ctx, session, username, rollbackCQL)
+				if rollbackErr != nil {
+					err = multierror.Append(err, rollbackErr)
+				}
+				return dbplugin.NewUserResponse{}, err
+			}
+		} 
+		else {
 		for _, query := range strutil.ParseArbitraryStringSlice(stmt, ";") {
 			query = strings.TrimSpace(query)
 			if len(query) == 0 {
@@ -142,7 +160,7 @@ func (c *Cassandra) NewUser(ctx context.Context, req dbplugin.NewUserRequest) (d
 				}
 				return dbplugin.NewUserResponse{}, err
 			}
-		}
+		} }
 	}
 
 	resp := dbplugin.NewUserResponse{
